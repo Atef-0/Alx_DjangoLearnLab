@@ -21,7 +21,7 @@ class LibraryDetailView(DetailView):
 def user_login(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
-        if form.isvalid():
+        if form.is_valid():
             user = form.get_user()
             login(request, user)
             return redirect('home')
