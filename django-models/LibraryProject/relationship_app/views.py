@@ -36,7 +36,7 @@ def is_member(user):
 # Role-based views with both decorators
 @login_required
 @user_passes_test(is_admin, login_url='/login/')
-def Admin(request):
+def admin_view(request):
     """Admin-only view"""
     return render(request, 'relationship_app/admin_view.html')
 
