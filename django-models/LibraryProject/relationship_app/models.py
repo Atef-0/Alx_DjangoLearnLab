@@ -1,94 +1,66 @@
-from django.shortcuts import render
-from .models import Book
-from .models import Library
-from django.views.generic.detail import DetailView
-from django.contrib.auth import login
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponseForbidden
-from .models import UserProfile
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import permission_required
+from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-def list_books(request):
-	books = Book.objects.all()
-	return render(request, "relationship_app/list_books.html", {'books': books})
+# Create your models here.
 
-class LibraryDetailView(DetailView):
-	model = Library
-	template_name = 'relationship_app/library_detail.html'
-	context_object_name = 'library'
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)  
-            return redirect('login')  
+class Author(models.Model):
+    name = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.name
+    
+class Book(models.Model):
+    title = models.CharField(max_length=100)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='books')
+    
+    class Meta:
+        permissions = [
+            ("can_add_book", "Can add book"),
+            ("can_change_book", "Can change book"),
+            ("can_delete_book", "Can delete book"),
+        ]
+    
+    def __str__(self):
+        return self.title
+
+class Library(models.Model):
+    name = models.CharField(max_length=100)
+    books = models.ManyToManyField(Book, related_name="libraries")
+    
+    def __str__(self):
+        return self.name
+    
+class Librarian(models.Model):
+    name = models.CharField(max_length=100)
+    library = models.OneToOneField(Library, on_delete=models.CASCADE, related_name="librarian")
+    
+    def __str__(self):
+        return self.name
+
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('Admin', 'Admin'),
+        ('Librarian', 'Librarian'),
+        ('Member', 'Member'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Member')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.role}"
+
+# Signal to automatically create UserProfile when a new user is registered
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'userprofile'):
+        instance.userprofile.save()
     else:
-        form = UserCreationForm()
-    return render(request, 'relationship_app/register.html', {'form': form})
-
-class CustomLoginView(LoginView):
-    template_name = 'relationship_app/login.html'
-
-class CustomLogoutView(LogoutView):
-    template_name = 'relationship_app/logout.html'
-	
-def is_admin(user):
-    return user.userprofile.role == 'Admin'
-
-def is_librarian(user):
-    return user.userprofile.role == 'Librarian'
-
-def is_member(user):
-    return user.userprofile.role == 'Member'
-
-@login_required
-@user_passes_test(is_admin)
-def admin_view(request):
-    return render(request, 'relationship_app/admin_view.html')
-
-@login_required
-@user_passes_test(is_librarian)
-def librarian_view(request):
-    return render(request, 'relationship_app/librarian_view.html')
-
-@login_required
-@user_passes_test(is_member)
-def member_view(request):
-    return render(request, 'relationship_app/member_view.html')
-
-@permission_required('relationship_app.can_add_book', raise_exception=True)
-def add_book(request):
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        author_id = request.POST.get('author')
-        publication_year = request.POST.get('publication_year')
-
-        book = Book(title=title, author_id=author_id, publication_year=publication_year)
-        book.save()
-        return redirect('book_list')  
-    return render(request, 'relationship_app/add_book.html')
-
-@permission_required('relationship_app.can_change_book', raise_exception=True)
-def edit_book(request, book_id):
-    book = get_object_or_404(Book, id=book_id)
-
-    if request.method == 'POST':
-        book.title = request.POST.get('title')
-        book.author_id = request.POST.get('author')
-        book.publication_year = request.POST.get('publication_year')
-        book.save()
-        return redirect('book_list')  
-    return render(request, 'relationship_app/edit_book.html', {'book': book})
-
-@permission_required('relationship_app.can_delete_book', raise_exception=True)
-def delete_book(request, book_id):
-    book = get_object_or_404(Book, id=book_id)
-
-    if request.method == 'POST':
-        book.delete()
-        return redirect('book_list')  
-
-    return render(request, 'relationship_app/delete_book.html', {'book': book})
+        UserProfile.objects.create(user=instance)
