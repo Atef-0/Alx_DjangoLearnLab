@@ -26,6 +26,7 @@ from rest_framework.authtoken.models import Token
 from .models import Book, Author
 from .serializers import BookSerializer
 import json
+self.client.login
 
 
 class BookAPITestCase(APITestCase):
