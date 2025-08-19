@@ -6,6 +6,7 @@ from .serializers import BookSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 import django_filters.rest_framework
 from rest_framework import filters
+from django_filters import rest_framework
 
 
 # Create your views here.
