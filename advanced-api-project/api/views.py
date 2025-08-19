@@ -4,6 +4,10 @@ from django.urls import reverse_lazy
 from .models import Book
 from .serializers import BookSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+import django_filters.rest_framework
+from rest_framework import filters
+
+
 # Create your views here.
 """
 Implement a set of generic views for the Book model to handle CRUD operations. This includes:
@@ -18,7 +22,12 @@ class BookListView(generics.ListAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['title', 'author', 'published_date']
+    search_fields = ['title', 'author']
+    ordering_fields = ['title', 'publication_year']
+
+
 class BookDetailView(generics.RetrieveAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
