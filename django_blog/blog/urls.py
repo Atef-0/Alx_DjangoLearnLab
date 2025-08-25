@@ -40,4 +40,5 @@ urlpatterns = [
     path('post/<int:pk>/comments/new/', CommentCreateView.as_view(), name='comment_create_class'),
     path('comment/<int:pk>/update/', CommentUpdateView.as_view(), name='comment_update'),
     path('comment/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment_delete'),
+    tags/<slug:tag_slug>/", "PostByTagListView.as_view()
 ]
