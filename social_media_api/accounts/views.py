@@ -5,6 +5,8 @@ from .serializers import CustomUserSerializer
 from rest_framework import status, permissions
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from django.shortcuts import render
+from .models import CustomUser
 # Create your views here.
 
 
@@ -49,3 +51,29 @@ class UserProfileView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+
+    class Follow_User(APIView):
+        permission_classes = [permissions.IsAuthenticated]
+
+        def post(self, request, *args, **kwargs):
+            user_to_follow = CustomUser.objects.get(pk=kwargs['pk'])
+            request.user.following.add(user_to_follow)
+            user_to_follow.followers.add(request.user)
+            return Response({"message": "You are now following {}".format(user_to_follow.username)}, status=status.HTTP_200_OK)
+
+        def delete(self, request, *args, **kwargs):
+            user_to_unfollow = CustomUser.objects.get(pk=kwargs['pk'])
+            request.user.following.remove(user_to_unfollow)
+            user_to_unfollow.followers.remove(request.user)
+            return Response({"message": "You have unfollowed {}".format(user_to_unfollow.username)}, status=status.HTTP_200_OK)
+
+class Unfollow_User(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user_to_unfollow = CustomUser.objects.get(pk=kwargs['pk'])
+        request.user.following.remove(user_to_unfollow)
+        user_to_unfollow.followers.remove(request.user)
+        return Response({"message": "You have unfollowed {}".format(user_to_unfollow.username)}, status=status.HTTP_200_OK)
