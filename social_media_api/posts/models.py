@@ -44,3 +44,28 @@ class Comment(models.Model):
          ordering = ['created_at']  
 
 ["models.TextField()"]
+["models.TextField()"]
+
+["Like"]
+# Create your models here.
+class Like(models.Model):
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='likes',
+        verbose_name="Post"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='likes',
+        verbose_name="User"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+
+    class Meta:
+        unique_together = ('post', 'user')  # Ensure a user can like a post only once
+        ordering = ['-created_at']  # Order likes by creation date (latest first)
+
+    def __str__(self):
+        return f"{self.user.username} likes {self.post.title}"
