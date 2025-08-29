@@ -9,7 +9,7 @@ from django.shortcuts import render
 from .models import CustomUser
 # Create your views here.
 
-
+["generics.GenericAPIView", "permissions.IsAuthenticated", "CustomUser.objects.all()"]
 class UserRegisterationView(APIView):
     permission_classes = [permissions.AllowAny]
 
