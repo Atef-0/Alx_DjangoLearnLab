@@ -7,7 +7,7 @@ from rest_framework.authtoken.models import Token
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    random_field = serializers.CharField(write_only=True, required=False)
+    #random_field = serializers.CharField()
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'bio', 'profile_picture', 'followers', 'following']
